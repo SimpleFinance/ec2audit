@@ -15,8 +15,10 @@ def name_and_tags(it):
 def instance_data(i):
     data = NaturalOrderDict()
 
+    data['zone'] = i.placement
+
     verbatim = ['id', 'image_id', 'architecture', 'instance_type',
-                'launch_time', 'placement', 'private_ip_address', 'ip_address',
+                'launch_time', 'private_ip_address', 'ip_address',
                 'root_device_type', 'state']
 
     vpc_only = ['sourceDest', 'subnet_id', 'vpc_id']
@@ -36,9 +38,9 @@ def instance_data(i):
         data['security_groups'][group.id] = group.name
 
     if i.block_device_mapping:
-        data['devices'] = NaturalOrderDict()
+        data['volumes'] = NaturalOrderDict()
         for dev, vol in i.block_device_mapping.items():
-            data['devices'][dev] = vol.volume_id
+            data['volumes'][dev] = vol.volume_id
 
     name, tags = name_and_tags(i)
     if tags:
