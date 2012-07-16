@@ -95,7 +95,8 @@ def run(params):
                 instance['volumes'][k] = instance_relevant_volume(volumes[v])
 
     output = params['--output']
+    data = dict(volumes=volumes, instances=instances)
     if not output:
-        to_stdout(instances, params['--format'])
+        to_stdout(data, params['--format'])
     else:
-        to_dir(instances, params['--format'], output)
+        to_dir(data, params['--format'], output)

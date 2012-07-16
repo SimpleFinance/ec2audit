@@ -12,7 +12,7 @@ def to_stdout(data, fmt):
         from pprint import pprint
         pprint(data)
 
-def to_dir(instances, fmt, output):
+def to_dir(data, fmt, output):
     if fmt.startswith('j'):
         import json
         ext = 'json'
@@ -27,6 +27,9 @@ def to_dir(instances, fmt, output):
         dump = lambda data, f: pprint(data, f)
 
     mkdirp(output)
-    for name, data in instances.items():
-        with open(join(output, name + '.' + ext), 'w') as f:
-            dump({name:data}, f)
+    for dtype, items in data.items():
+        base = join(output, dtype)
+        mkdirp(base)
+        for name, item in items.items():
+            with open(join(base, name + '.' + ext), 'w') as f:
+                dump({name:data}, f)
