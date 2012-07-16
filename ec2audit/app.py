@@ -46,13 +46,19 @@ def instance_data(i):
     if tags:
         data['tags'] = tags
 
-    tags = i.tags.copy();
-    tags.pop('Name')
+    return name, data
+
+def volume_data(vol):
+    data = NaturalOrderDict()
+
+    tags = vol.__dict__['tags']
     if tags:
         data['tags'] = NaturalOrderDict(tags)
 
-    return name, data
+    for key in ['id', 'create_time', 'size', 'status', 'snapshot_id']:
+        data[key] = vol.__dict__[key]
 
+    return vol.id, data
 
 def get_ec2_instances(econ):
     instances = NaturalOrderDict()
@@ -63,6 +69,11 @@ def get_ec2_instances(econ):
 
     return instances
 
+def instance_relevant_volume(vol):
+    return NaturalOrderDict(id=vol['id'], size=vol['size'])
+
+def get_ec2_volumes(econ):
+    return NaturalOrderDict(volume_data(vol) for vol in econ.get_all_volumes())
 
 def run(params):
     access_key, secret_key = get_aws_credentials(params)
@@ -75,7 +86,14 @@ def run(params):
                                  aws_secret_access_key=secret_key)
 
 
+    volumes = get_ec2_volumes(con)
     instances = get_ec2_instances(con)
+
+    for instance in instances.values():
+        if 'volumes' in instance:
+            for k, v in instance['volumes'].items():
+                instance['volumes'][k] = instance_relevant_volume(volumes[v])
+
     output = params['--output']
     if not output:
         to_stdout(instances, params['--format'])
