@@ -73,6 +73,45 @@ def instance_relevant_volume(vol):
 def get_ec2_volumes(econ):
     return NaturalOrderDict(volume_data(vol) for vol in econ.get_all_volumes())
 
+def handle_rules(sg, rules):
+    data = NaturalOrderDict()
+    for rule in rules:
+        proto = data.setdefault(rule.ip_protocol, NaturalOrderDict())
+        if rule.to_port == '-1':
+            port = '*'
+        elif rule.from_port == rule.to_port:
+            port = rule.from_port
+        else:
+            port = rule.from_port + "-" + rule.to_port
+        fromto = proto.setdefault(port, [])
+
+        for grant in rule.grants:
+            if grant.cidr_ip:
+                fromto.append(grant.cidr_ip)
+            else:
+                if grant.owner_id != sg.owner_id:
+                    fromto.append(dict(name=NaturalOrderDict(owner_id=grant.owner_id,
+                                                             group_id=grant.group_id)))
+                else:
+                    fromto.append(grant.name)
+
+    for port in data.values():
+        data[port] = sorted(data[port])
+
+    return data
+
+def sg_data(sg):
+    data = NaturalOrderDict()
+    data['id'] = sg.id
+    data['name'] = sg.name
+    data['inbound'] = handle_rules(sg.rules)
+    if sg.rules_egress:
+        data['outbound'] = handle_rules(sg.rules_egress)
+    return data['name'], data
+
+def get_security_groups(ec2):
+    return NaturalOrderDict(sg_data(sg) for sg in ec2.get_all_security_groups())
+
 def run(params):
     access_key, secret_key = get_aws_credentials(params)
     region = params['<region>']
@@ -86,6 +125,7 @@ def run(params):
 
     volumes = get_ec2_volumes(con)
     instances = get_ec2_instances(con)
+    security_groups = get_ec2_security_groups(con)
 
     for instance in instances.values():
         if 'volumes' in instance:
@@ -93,7 +133,10 @@ def run(params):
                 instance['volumes'][k] = instance_relevant_volume(volumes[v])
 
     output = params['--output']
-    data = dict(volumes=volumes, instances=instances)
+    data = dict(volumes=volumes,
+                instances=instances,
+                security_groups=security_groups)
+
     if not output:
         to_stdout(data, params['--format'])
     else:

@@ -32,4 +32,4 @@ def to_dir(data, fmt, output):
         mkdirp(base)
         for name, item in items.items():
             with open(join(base, name + '.' + ext), 'w') as f:
-                dump({name:data}, f)
+                dump({name:item}, f)
