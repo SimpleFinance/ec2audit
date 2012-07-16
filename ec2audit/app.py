@@ -90,26 +90,25 @@ def handle_rules(sg, rules):
                 fromto.append(grant.cidr_ip)
             else:
                 if grant.owner_id != sg.owner_id:
-                    fromto.append(dict(name=NaturalOrderDict(owner_id=grant.owner_id,
-                                                             group_id=grant.group_id)))
+                    fromto.append(dict(name=(grant.owner_id, grant.group_id)))
                 else:
                     fromto.append(grant.name)
 
-    for port in data.values():
-        data[port] = sorted(data[port])
+    for proto, ports in data.items():
+        for port in ports:
+            ports[port] = sorted(ports[port])
 
     return data
 
 def sg_data(sg):
     data = NaturalOrderDict()
     data['id'] = sg.id
-    data['name'] = sg.name
-    data['inbound'] = handle_rules(sg.rules)
+    data['inbound'] = handle_rules(sg, sg.rules)
     if sg.rules_egress:
-        data['outbound'] = handle_rules(sg.rules_egress)
-    return data['name'], data
+        data['outbound'] = handle_rules(sg, sg.rules_egress)
+    return sg.name, data
 
-def get_security_groups(ec2):
+def get_ec2_security_groups(ec2):
     return NaturalOrderDict(sg_data(sg) for sg in ec2.get_all_security_groups())
 
 def run(params):
@@ -133,9 +132,9 @@ def run(params):
                 instance['volumes'][k] = instance_relevant_volume(volumes[v])
 
     output = params['--output']
-    data = dict(volumes=volumes,
-                instances=instances,
-                security_groups=security_groups)
+    data = NaturalOrderDict(volumes=volumes,
+                            instances=instances,
+                            security_groups=security_groups)
 
     if not output:
         to_stdout(data, params['--format'])
