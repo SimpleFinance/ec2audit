@@ -5,6 +5,13 @@ from boto import ec2, dynamodb
 from ec2audit.utils import *
 from ec2audit.output import to_dir, to_stdout
 
+def name_and_tags(it):
+    name = it.tags.get('Name') or it.id
+
+    tags = it.tags.copy();
+    tags.pop('Name')
+    return name, NaturalOrderDict(tags)
+
 def instance_data(i):
     data = NaturalOrderDict()
 
@@ -33,7 +40,9 @@ def instance_data(i):
         for dev, vol in i.block_device_mapping.items():
             data['devices'][dev] = vol.volume_id
 
-    name = i.tags.get('Name') or i.id
+    name, tags = name_and_tags(i)
+    if tags:
+        data['tags'] = tags
 
     tags = i.tags.copy();
     tags.pop('Name')
