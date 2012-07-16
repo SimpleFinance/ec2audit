@@ -33,9 +33,7 @@ def instance_data(i):
         for key in vpc_only:
             data[key] = i.__dict__[key]
 
-    data['security_groups'] = NaturalOrderDict()
-    for group in i.groups:
-        data['security_groups'][group.id] = group.name
+    data['security_groups'] = sorted([g.name for g in i.groups])
 
     if i.block_device_mapping:
         data['volumes'] = NaturalOrderDict()
@@ -48,6 +46,15 @@ def instance_data(i):
 
     return name, data
 
+def get_ec2_instances(econ):
+    instances = NaturalOrderDict()
+    for res in econ.get_all_instances():
+        for i in res.instances:
+            name, data = instance_data(i)
+            instances[name] = data
+
+    return instances
+
 def volume_data(vol):
     data = NaturalOrderDict()
 
@@ -59,15 +66,6 @@ def volume_data(vol):
         data[key] = vol.__dict__[key]
 
     return vol.id, data
-
-def get_ec2_instances(econ):
-    instances = NaturalOrderDict()
-    for res in econ.get_all_instances():
-        for i in res.instances:
-            name, data = instance_data(i)
-            instances[name] = data
-
-    return instances
 
 def instance_relevant_volume(vol):
     return NaturalOrderDict(id=vol['id'], size=vol['size'])
