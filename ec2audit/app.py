@@ -21,7 +21,7 @@ def instance_data(i):
                 'launch_time', 'private_ip_address', 'ip_address',
                 'root_device_type', 'state']
 
-    vpc_only = ['sourceDest', 'subnet_id', 'vpc_id']
+    vpc_only = ['sourceDestCheck', 'subnet_id', 'vpc_id']
 
     for key in verbatim:
         v = i.__dict__[key]
