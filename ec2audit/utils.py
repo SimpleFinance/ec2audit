@@ -34,7 +34,7 @@ def get_aws_credentials(params):
         with open(params.get('--secret-key-file')) as f:
             secret_key = f.read().strip()
     else:
-        secret_key = params.get('--secret-key-id') or os.environ.get('AWS_SECRET_ACCESS_KEY')
+        secret_key = params.get('--secret-key') or os.environ.get('AWS_SECRET_ACCESS_KEY')
     if not (access_key and secret_key):
         exit_with_error('ERROR: Invalid AWS credentials supplied.')
     return access_key, secret_key
