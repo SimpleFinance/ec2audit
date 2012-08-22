@@ -6,13 +6,9 @@ from ec2audit.utils import *
 from ec2audit.output import to_dir, to_stdout
 
 def name_and_tags(it):
-    name = it.tags.get('Name') or it.id
-
     tags = it.tags.copy()
-    if tags:
-        tags.pop('Name')
-        return name, NaturalOrderDict(tags)
-    return name, {}
+    name = tags.pop('Name', it.id)
+    return name, NaturalOrderDict(tags)
 
 def instance_data(i):
     data = NaturalOrderDict()
