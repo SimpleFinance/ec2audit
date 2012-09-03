@@ -31,5 +31,5 @@ def to_dir(data, fmt, output):
         base = join(output, dtype)
         mkdirp(base)
         for name, item in items.items():
-            with open(join(base, name + '.' + ext), 'w') as f:
+            with open(join(base, name.replace('/', ':') + '.' + ext), 'w') as f:
                 dump({name:item}, f)
